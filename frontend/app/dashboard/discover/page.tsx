@@ -194,42 +194,42 @@ export default function DiscoverPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Discover Properties</h1>
-        <p className="text-slate-400">Paste your Airbnb search URL to find unavailable properties to monitor.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">Discover Properties</h1>
+        <p className="text-sm sm:text-base text-slate-400">Paste your Airbnb search URL to find unavailable properties to monitor.</p>
       </div>
 
       {/* Search Form */}
-      <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl">
-        <form onSubmit={handleSearch} className="space-y-4">
+      <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-8 shadow-xl">
+        <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
           {/* URL Input */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-500" />
             <input
               type="url"
               required
-              placeholder="https://www.airbnb.com/rooms/12345 or search URL"
-              className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+              placeholder="Paste Airbnb URL here..."
+              className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 sm:py-4 pl-10 sm:pl-12 pr-3 sm:pr-4 text-sm sm:text-base text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
               value={searchUrl}
               onChange={(e) => setSearchUrl(e.target.value)}
             />
           </div>
 
           {/* Date and Guest Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <DateRangePicker
               date={dateRange}
               onDateChange={setDateRange}
             />
             <div className="relative">
-              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Users className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-500" />
               <input
                 type="number"
                 placeholder="Guests"
                 min="1"
                 max="16"
-                className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+                className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 sm:py-4 pl-10 sm:pl-12 pr-3 sm:pr-4 text-sm sm:text-base text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
                 value={guests}
                 onChange={(e) => setGuests(parseInt(e.target.value) || 2)}
               />
@@ -240,22 +240,22 @@ export default function DiscoverPage() {
           <button
             type="submit"
             disabled={isSearching}
-            className="w-full px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation text-sm sm:text-base"
           >
             {isSearching ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                Find Properties <ArrowRight className="w-5 h-5" />
+                Find Properties <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5" />
               </>
             )}
           </button>
         </form>
-        <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          <span>Dates optional for search URLs, required for property URLs</span>
-          <span className="mx-2">•</span>
-          <span>Supports Airbnb</span>
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+          <span>Dates optional for search URLs</span>
+          <span className="hidden sm:inline mx-2">•</span>
+          <span className="hidden sm:inline">Supports Airbnb</span>
         </div>
       </div>
 
@@ -264,50 +264,55 @@ export default function DiscoverPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-4">
             {results.length === 1 ? (
               <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white">Property Details</h2>
-                <p className="text-slate-400">
+                <h2 className="text-lg sm:text-xl font-bold text-white">Property Details</h2>
+                <p className="text-sm sm:text-base text-slate-400">
                   {results[0].status === 'available'
                     ? 'This property is currently available for your dates!'
                     : 'This property is currently booked. Would you like to monitor it for cancellations?'}
                 </p>
               </div>
             ) : (
-              <h2 className="text-xl font-bold text-white">Found {results.length} properties that meet your criteria but are currently booked. Select the ones you want to monitor for cancellations</h2>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">Found {results.length} properties</h2>
+                <p className="text-sm text-slate-400 mt-1">Currently booked. Select the ones you want to monitor for cancellations.</p>
+              </div>
             )}
             {selectedProperties.length > 0 && (
               <button
                 onClick={handleAddToWatchlist}
-                className="px-6 py-2 rounded-full bg-white text-slate-950 font-bold hover:bg-slate-200 transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white text-slate-950 font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]"
               >
                 {results.length === 1 ? 'Monitor This Property' : `Monitor Selected (${selectedProperties.length})`}
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {results.map((property) => (
               <div
                 key={property.id}
                 onClick={() => toggleSelection(property.id)}
-                className={`group relative bg-slate-900/50 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${
+                className={`group relative bg-slate-900/50 border rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 touch-manipulation active:scale-[0.99] ${
                   selectedProperties.includes(property.id)
                     ? 'border-purple-500 ring-1 ring-purple-500/50'
                     : 'border-white/10 hover:border-white/20'
                 }`}
               >
-                <div className="flex h-full">
+                {/* Mobile: Stack layout, Desktop: Side by side */}
+                <div className="flex flex-col sm:flex-row sm:h-full">
                   {/* Image */}
-                  <div className="w-1/3 relative bg-slate-800">
+                  <div className="w-full sm:w-1/3 h-40 sm:h-auto relative bg-slate-800 flex-shrink-0">
                     {property.imageUrl ? (
                       <img
                         src={property.imageUrl}
                         alt={property.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-white/20 bg-gradient-to-br from-slate-700 to-slate-800">
@@ -321,15 +326,24 @@ export default function DiscoverPage() {
                     }`}>
                       {property.status === 'available' ? 'Available' : 'Booked'}
                     </div>
+                    {/* Mobile selection indicator */}
+                    <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border flex items-center justify-center transition-colors sm:hidden ${
+                      selectedProperties.includes(property.id)
+                        ? 'bg-purple-500 border-purple-500'
+                        : 'border-white/40 bg-black/30'
+                    }`}>
+                      {selectedProperties.includes(property.id) && <Plus className="w-4 h-4 text-white" />}
+                    </div>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 p-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-white group-hover:text-purple-400 transition-colors line-clamp-1">
+                  <div className="flex-1 p-4 sm:p-6 min-w-0">
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <h3 className="font-bold text-white group-hover:text-purple-400 transition-colors line-clamp-2 sm:line-clamp-1 text-sm sm:text-base">
                         {property.name}
                       </h3>
-                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${
+                      {/* Desktop selection indicator */}
+                      <div className={`hidden sm:flex w-6 h-6 rounded-full border items-center justify-center transition-colors flex-shrink-0 ${
                         selectedProperties.includes(property.id)
                           ? 'bg-purple-500 border-purple-500'
                           : 'border-white/20 group-hover:border-white/40'
@@ -338,26 +352,26 @@ export default function DiscoverPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-sm text-slate-400 mb-4">
+                    <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-slate-400 mb-3 sm:mb-4">
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        {property.location}
+                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{property.location}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {property.dates}
+                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span>{property.dates}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        {property.guests} guests
+                        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span>{property.guests} guests</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-                      <span className="font-bold text-white text-lg">{property.price}</span>
-                      <div className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/5">
+                      <span className="font-bold text-white text-base sm:text-lg">{property.price}</span>
+                      <div className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 ${
                         selectedProperties.includes(property.id)
-                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25 translate-y-0'
+                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
                           : 'bg-white/10 text-white group-hover:bg-white/20'
                       }`}>
                         {selectedProperties.includes(property.id) ? 'Selected' : 'Select'}

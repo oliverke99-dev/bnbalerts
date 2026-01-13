@@ -103,33 +103,33 @@ export default function WatchlistPage() {
   if (isLoading) return null;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Your Watchlist</h1>
-          <p className="text-slate-400">Manage your active property monitors.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">Your Watchlist</h1>
+          <p className="text-sm sm:text-base text-slate-400">Manage your active property monitors.</p>
         </div>
-        <div className="bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-slate-400">
+        <div className="bg-slate-900/50 border border-white/10 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-400 self-start sm:self-auto">
           {watches.length} / 5 Active Watches
         </div>
       </div>
 
       {watches.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900/30 border border-white/10 rounded-2xl border-dashed">
-          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-slate-500" />
+        <div className="text-center py-12 sm:py-20 bg-slate-900/30 border border-white/10 rounded-xl sm:rounded-2xl border-dashed">
+          <div className="w-12 sm:w-16 h-12 sm:h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <AlertCircle className="w-6 sm:w-8 h-6 sm:h-8 text-slate-500" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">No active watches</h3>
-          <p className="text-slate-400 mb-6">Start by discovering properties to monitor.</p>
-          <a 
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">No active watches</h3>
+          <p className="text-sm sm:text-base text-slate-400 mb-4 sm:mb-6 px-4">Start by discovering properties to monitor.</p>
+          <a
             href="/dashboard/discover"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-slate-950 font-bold hover:bg-slate-200 transition-colors"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-white text-slate-950 font-bold hover:bg-slate-200 transition-colors touch-manipulation active:scale-[0.98] text-sm sm:text-base"
           >
             Find Properties
           </a>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:gap-6">
           <AnimatePresence>
             {watches.map((watch) => (
               <motion.div
@@ -138,96 +138,105 @@ export default function WatchlistPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 layout
-                className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row gap-6 group hover:border-white/20 transition-all"
+                className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 group hover:border-white/20 transition-all"
               >
-                {/* Image */}
-                <div className="w-full md:w-48 h-32 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0 relative overflow-hidden">
-                  {watch.imageUrl ? (
-                    <img
-                      src={watch.imageUrl}
-                      alt={watch.propertyName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-white/20">
-                      <MapPin className="w-8 h-8" />
+                {/* Top section: Image + Basic Info */}
+                <div className="flex gap-3 sm:gap-4">
+                  {/* Image */}
+                  <div className="w-20 sm:w-32 md:w-48 h-20 sm:h-24 md:h-32 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex-shrink-0 relative overflow-hidden">
+                    {watch.imageUrl ? (
+                      <img
+                        src={watch.imageUrl}
+                        alt={watch.propertyName}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-white/20">
+                        <MapPin className="w-6 sm:w-8 h-6 sm:h-8" />
+                      </div>
+                    )}
+                    <div className={`absolute top-1.5 sm:top-2 left-1.5 sm:left-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
+                      watch.status === 'active' ? 'bg-green-500 text-white' :
+                      watch.status === 'paused' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white'
+                    }`}>
+                      {watch.status}
                     </div>
-                  )}
-                  <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
-                    watch.status === 'active' ? 'bg-green-500 text-white' :
-                    watch.status === 'paused' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white'
-                  }`}>
-                    {watch.status}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-2 mb-1 sm:mb-2">
+                      <h3 className="text-sm sm:text-lg md:text-xl font-bold text-white line-clamp-2 sm:truncate">{watch.propertyName}</h3>
+                      <a
+                        href={watch.propertyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-500 hover:text-white transition-colors flex-shrink-0 p-1 touch-manipulation"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-4 sm:w-5 h-4 sm:h-5" />
+                      </a>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <MapPin className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">{watch.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Calendar className="w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                        <span>{formatDates(watch.checkInDate, watch.checkOutDate)}</span>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] sm:text-xs text-slate-500">
+                      Last checked: {formatLastChecked(watch.lastScannedAt)}
+                    </div>
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-white truncate pr-4">{watch.propertyName}</h3>
-                    <a
-                      href={watch.propertyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-500 hover:text-white transition-colors"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
+                {/* Controls */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-3 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                  {/* Frequency selector */}
+                  <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 rounded-lg p-0.5 sm:p-1 border border-white/10 flex-shrink-0">
+                    {(['daily', 'hourly', 'sniper'] as const).map((freq) => (
+                      <button
+                        key={freq}
+                        onClick={() => updateFrequency(watch.id, freq)}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-medium transition-all touch-manipulation ${
+                          watch.frequency === freq
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-400 mb-4">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      {watch.location}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {formatDates(watch.checkInDate, watch.checkOutDate)}
-                    </div>
-                  </div>
+                  <div className="flex-1" />
 
-                  <div className="text-xs text-slate-500 mb-6">
-                    Last checked: {formatLastChecked(watch.lastScannedAt)}
-                  </div>
-
-                  {/* Controls */}
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2 bg-slate-950 rounded-lg p-1 border border-white/10">
-                      {(['daily', 'hourly', 'sniper'] as const).map((freq) => (
-                        <button
-                          key={freq}
-                          onClick={() => updateFrequency(watch.id, freq)}
-                          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                            watch.frequency === freq
-                              ? 'bg-white/10 text-white shadow-sm'
-                              : 'text-slate-500 hover:text-slate-300'
-                          }`}
-                        >
-                          {freq.charAt(0).toUpperCase() + freq.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex-1" />
-
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleStatus(watch.id)}
-                      className={`p-2 rounded-lg border transition-colors ${
+                      className={`p-2 sm:p-2.5 rounded-lg border transition-colors touch-manipulation active:scale-[0.95] ${
                         watch.status === 'active'
                           ? 'border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/10'
                           : 'border-green-500/20 text-green-500 hover:bg-green-500/10'
                       }`}
                       title={watch.status === 'active' ? 'Pause Scanning' : 'Resume Scanning'}
                     >
-                      {watch.status === 'active' ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                      {watch.status === 'active' ? <Pause className="w-4 sm:w-5 h-4 sm:h-5" /> : <Play className="w-4 sm:w-5 h-4 sm:h-5" />}
                     </button>
 
                     <button
                       onClick={() => handleDelete(watch.id)}
-                      className="p-2 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors"
+                      className="p-2 sm:p-2.5 rounded-lg border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-colors touch-manipulation active:scale-[0.95]"
                       title="Delete Watch"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
                     </button>
                   </div>
                 </div>

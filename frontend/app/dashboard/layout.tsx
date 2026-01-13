@@ -165,8 +165,8 @@ export default function DashboardLayout({
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 min-h-screen pt-16 md:pt-0 p-6 md:p-10 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 md:ml-64 min-h-screen pt-14 md:pt-0 px-4 py-4 sm:p-6 md:p-10 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto pb-safe">
           {children}
         </div>
       </main>

@@ -94,10 +94,14 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Support wildcard "*" for development or specific origins for production
+cors_origins = settings.cors_origins_list
+allow_all_origins = "*" in cors_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
+    allow_origins=["*"] if allow_all_origins else cors_origins,
+    allow_credentials=not allow_all_origins,  # credentials not allowed with wildcard
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],

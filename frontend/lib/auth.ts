@@ -3,7 +3,7 @@
 // API Configuration
 // When NEXT_PUBLIC_API_URL is not set, dynamically determine the API URL based on the current host
 function getApiBaseUrl(): string {
-  // Check for environment variable first
+  // Check for environment variable first (set at build time)
   if (typeof window !== 'undefined' && (window as any).__NEXT_PUBLIC_API_URL) {
     return (window as any).__NEXT_PUBLIC_API_URL;
   }
@@ -13,10 +13,25 @@ function getApiBaseUrl(): string {
     return envUrl;
   }
   
-  // In browser, use the current hostname with backend port
+  // In browser, determine API URL based on environment
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // Use the same hostname but with backend port 8000
+    const protocol = window.location.protocol;
+    
+    // Production: Render deployment - use the backend API URL
+    if (hostname.includes('onrender.com') || hostname.includes('bnbalerts')) {
+      // For Render deployments, the backend is at bnbalerts-api.onrender.com
+      return 'https://bnbalerts-api.onrender.com/api/v1';
+    }
+    
+    // Production: Custom domain
+    if (hostname !== 'localhost' && !hostname.match(/^(\d{1,3}\.){3}\d{1,3}$/)) {
+      // For custom domains, assume API is at api.{domain}
+      const domain = hostname.replace(/^www\./, '');
+      return `${protocol}//api.${domain}/api/v1`;
+    }
+    
+    // Development: Use the same hostname but with backend port 8000
     return `http://${hostname}:8000/api/v1`;
   }
   

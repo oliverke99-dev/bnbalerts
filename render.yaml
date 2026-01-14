@@ -1,0 +1,36 @@
+# Render Blueprint for BnBAlerts Backend API
+# Deploy this as a Web Service on Render
+
+services:
+  - type: web
+    name: bnbalerts-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # Set this manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false  # Set this manually in Render dashboard
+      - key: JWT_EXPIRES_IN
+        value: 86400
+      - key: CORS_ORIGINS
+        value: https://bnbalerts.onrender.com
+      - key: TWILIO_ACCOUNT_SID
+        sync: false  # Set this manually in Render dashboard
+      - key: TWILIO_AUTH_TOKEN
+        sync: false  # Set this manually in Render dashboard
+      - key: TWILIO_PHONE_NUMBER
+        sync: false  # Set this manually in Render dashboard
+      - key: APIFY_API_TOKEN
+        sync: false  # Optional
+      - key: APIFY_ACTOR_ID
+        value: dtrungtin/airbnb-scraper
+      - key: APIFY_API_URL
+        value: https://api.apify.com/v2
+      - key: APIFY_TIMEOUT
+        value: 300
+    healthCheckPath: /
+    autoDeploy: true

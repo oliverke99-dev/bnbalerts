@@ -355,97 +355,76 @@ class PropertyFetcher:
                                     logger.info(f"Extracted location from description: {location}")
                                     break
                     
-                    # Check availability - look for unavailability indicators in HTML
-                    # These are text patterns that indicate the property is NOT available
-                    unavailable_indicators = [
-                        "isn't available",
-                        "not available",
-                        "unavailable",
-                        "already booked",
-                        "no longer available",
-                        "dates are not available",
-                        "Select dates",  # If it says "Select dates" instead of showing price, might be unavailable
-                    ]
+                    # Check availability using multiple signals
+                    # Priority: JSON data > Reserve button > generic text patterns
                     
                     html_lower = html.lower()
-                    is_unavailable = False
                     
-                    for indicator in unavailable_indicators:
-                        if indicator.lower() in html_lower:
-                            # Make sure it's not in a generic context
-                            # Look for it near booking-related content
-                            indicator_pos = html_lower.find(indicator.lower())
-                            if indicator_pos != -1:
-                                # Check surrounding context (500 chars before and after)
-                                context_start = max(0, indicator_pos - 500)
-                                context_end = min(len(html_lower), indicator_pos + 500)
-                                context = html_lower[context_start:context_end]
-                                
-                                # If the indicator is near booking-related words, it's likely about availability
-                                booking_words = ['book', 'reserve', 'check', 'date', 'stay', 'night']
-                                if any(word in context for word in booking_words):
-                                    is_unavailable = True
-                                    logger.info(f"Found unavailability indicator: '{indicator}'")
-                                    break
+                    # Count JSON availability signals - this is the most reliable
+                    available_true_count = 0
+                    available_false_count = 0
                     
-                    # Also check for availability indicators (positive signals)
-                    available_indicators = [
-                        '"isAvailable":true',
-                        '"available":true',
-                        'Reserve',
-                        'Book now',
-                        'Request to book',
-                        'per night',
-                        '/night',
-                    ]
+                    try:
+                        # Count all "available": true/false occurrences
+                        available_true_count = len(re.findall(r'"available"\s*:\s*true', html, re.IGNORECASE))
+                        available_false_count = len(re.findall(r'"available"\s*:\s*false', html, re.IGNORECASE))
+                        logger.info(f"JSON availability counts: true={available_true_count}, false={available_false_count}")
+                    except Exception as e:
+                        logger.debug(f"Could not count JSON availability: {e}")
                     
-                    has_availability_signal = False
-                    for indicator in available_indicators:
-                        if indicator.lower() in html_lower:
-                            has_availability_signal = True
-                            logger.info(f"Found availability indicator: '{indicator}'")
+                    # Check for Reserve/Book button - strong positive signal
+                    has_reserve_button = False
+                    reserve_indicators = ['reserve', 'book now', 'request to book']
+                    for indicator in reserve_indicators:
+                        if indicator in html_lower:
+                            has_reserve_button = True
+                            logger.info(f"Found reserve button indicator: '{indicator}'")
                             break
                     
-                    # Try to extract availability from embedded JSON data
-                    # Airbnb often embeds data in script tags
-                    try:
-                        # Look for JSON data with availability info
-                        json_patterns = [
-                            r'"isAvailable"\s*:\s*(true|false)',
-                            r'"available"\s*:\s*(true|false)',
-                            r'"bookable"\s*:\s*(true|false)',
-                        ]
-                        for pattern in json_patterns:
-                            json_match = re.search(pattern, html, re.IGNORECASE)
-                            if json_match:
-                                is_available_str = json_match.group(1).lower()
-                                if is_available_str == 'false':
-                                    is_unavailable = True
-                                    logger.info(f"Found JSON availability data: {pattern} = false")
-                                elif is_available_str == 'true':
-                                    has_availability_signal = True
-                                    logger.info(f"Found JSON availability data: {pattern} = true")
-                                break
-                    except Exception as e:
-                        logger.debug(f"Could not parse JSON availability: {e}")
+                    # Check for explicit "this place isn't available" message
+                    # This is a very specific phrase Airbnb uses when dates are blocked
+                    explicit_unavailable = False
+                    explicit_unavailable_phrases = [
+                        "this place isn't available",
+                        "these dates aren't available",
+                        "not available for your dates",
+                        "no longer available",
+                    ]
+                    for phrase in explicit_unavailable_phrases:
+                        if phrase in html_lower:
+                            explicit_unavailable = True
+                            logger.info(f"Found explicit unavailable phrase: '{phrase}'")
+                            break
                     
                     # Final availability determination
-                    # If we found explicit unavailability indicators, mark as unavailable
-                    # Otherwise, if we found availability signals, mark as available
-                    # Default to available if no clear indicators either way
-                    if is_unavailable:
+                    # Logic:
+                    # 1. If explicit unavailable message found -> unavailable
+                    # 2. If Reserve button found AND more true than false in JSON -> available
+                    # 3. If JSON has significantly more true than false -> available
+                    # 4. Default to available (optimistic)
+                    
+                    if explicit_unavailable:
                         property_data['available'] = False
                         property_data['reserve_button'] = False
-                        logger.info(f"Property {property_id} marked as UNAVAILABLE based on HTML indicators")
-                    elif has_availability_signal:
+                        logger.info(f"Property {property_id} marked as UNAVAILABLE (explicit message found)")
+                    elif has_reserve_button and available_true_count > available_false_count:
                         property_data['available'] = True
                         property_data['reserve_button'] = True
-                        logger.info(f"Property {property_id} marked as AVAILABLE based on HTML indicators")
+                        logger.info(f"Property {property_id} marked as AVAILABLE (Reserve button + JSON signals)")
+                    elif available_true_count > available_false_count * 2:
+                        # Significantly more true than false
+                        property_data['available'] = True
+                        property_data['reserve_button'] = True
+                        logger.info(f"Property {property_id} marked as AVAILABLE (JSON signals: {available_true_count} true vs {available_false_count} false)")
+                    elif has_reserve_button:
+                        property_data['available'] = True
+                        property_data['reserve_button'] = True
+                        logger.info(f"Property {property_id} marked as AVAILABLE (Reserve button found)")
                     else:
-                        # No clear indicators - default to available (optimistic)
+                        # Default to available (optimistic approach)
                         property_data['available'] = True
                         property_data['reserve_button'] = True
-                        logger.info(f"Property {property_id} defaulting to AVAILABLE (no clear indicators)")
+                        logger.info(f"Property {property_id} defaulting to AVAILABLE (no clear unavailable signals)")
                     
                     logger.info(f"httpx scraping successful for property {property_id}: {property_data.get('name')}, available={property_data.get('available')}")
                 else:

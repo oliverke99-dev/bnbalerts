@@ -125,6 +125,7 @@ class PropertyFetcher:
     async def _scrape_property_page(self, url: str, property_id: str) -> Dict[str, Any]:
         """
         Scrape property page for details using browser scraping with shorter timeout.
+        Falls back to httpx HTML scraping if Playwright is not available.
         
         Args:
             url: Property URL with dates
@@ -250,21 +251,116 @@ class PropertyFetcher:
                 return property_data
                 
         except ImportError:
-            logger.warning("Browser scraper not available, using fallback")
+            logger.warning("Browser scraper not available, trying httpx fallback")
         except Exception as e:
-            logger.error(f"Browser scraping failed: {str(e)}, using fallback")
+            logger.error(f"Browser scraping failed: {str(e)}, trying httpx fallback")
         
-        # Fallback - return basic info that can be filled in later
-        logger.info(f"Using fallback data for property {property_id}")
-        fallback_data = {
+        # Fallback - try httpx to fetch HTML and extract basic info
+        return await self._scrape_with_httpx(url, property_id)
+    
+    async def _scrape_with_httpx(self, url: str, property_id: str) -> Dict[str, Any]:
+        """
+        Fallback scraping using httpx to fetch HTML and extract metadata.
+        
+        Args:
+            url: Property URL
+            property_id: Property ID
+            
+        Returns:
+            Dictionary with property data extracted from HTML
+        """
+        import httpx
+        
+        property_data = {
             "name": f"Airbnb Property {property_id}",
             "location": "View on Airbnb for details",
             "price": "See Airbnb for pricing",
-            "image_url": f"https://a0.muscache.com/im/pictures/miso/Hosting-{property_id}/original/thumbnail.jpg",  # Standard Airbnb thumbnail pattern
+            "image_url": None,
             "available": False,
             "reserve_button": False
         }
-        return fallback_data
+        
+        try:
+            logger.info(f"Fetching property page with httpx: {url}")
+            
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+            }
+            
+            async with httpx.AsyncClient(follow_redirects=True, timeout=15.0) as client:
+                response = await client.get(url, headers=headers)
+                
+                if response.status_code == 200:
+                    html = response.text
+                    
+                    # Extract title from <title> tag or og:title meta tag
+                    # Pattern 1: <title>Property Name - Airbnb</title>
+                    title_match = re.search(r'<title[^>]*>([^<]+)</title>', html, re.IGNORECASE)
+                    if title_match:
+                        title = title_match.group(1).strip()
+                        # Clean up title - remove " - Airbnb" suffix
+                        if ' - Airbnb' in title:
+                            title = title.split(' - Airbnb')[0].strip()
+                        elif ' | Airbnb' in title:
+                            title = title.split(' | Airbnb')[0].strip()
+                        if title and title != "Airbnb":
+                            property_data['name'] = title
+                            logger.info(f"Extracted title from HTML: {title}")
+                    
+                    # Pattern 2: og:title meta tag
+                    og_title_match = re.search(r'<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+                    if not og_title_match:
+                        og_title_match = re.search(r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*property=["\']og:title["\']', html, re.IGNORECASE)
+                    if og_title_match and property_data['name'] == f"Airbnb Property {property_id}":
+                        og_title = og_title_match.group(1).strip()
+                        if og_title and og_title != "Airbnb":
+                            property_data['name'] = og_title
+                            logger.info(f"Extracted og:title from HTML: {og_title}")
+                    
+                    # Extract image from og:image meta tag
+                    og_image_match = re.search(r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+                    if not og_image_match:
+                        og_image_match = re.search(r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*property=["\']og:image["\']', html, re.IGNORECASE)
+                    if og_image_match:
+                        image_url = og_image_match.group(1).strip()
+                        if image_url and 'muscache.com' in image_url:
+                            property_data['image_url'] = image_url
+                            logger.info(f"Extracted og:image from HTML: {image_url[:100]}...")
+                    
+                    # Extract location from og:description or page content
+                    og_desc_match = re.search(r'<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+                    if not og_desc_match:
+                        og_desc_match = re.search(r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*property=["\']og:description["\']', html, re.IGNORECASE)
+                    if og_desc_match:
+                        description = og_desc_match.group(1).strip()
+                        # Try to extract location from description
+                        # Common patterns: "... in City, State" or "Located in City"
+                        location_patterns = [
+                            r'in\s+([A-Z][^.!?]+(?:,\s*[A-Z][^.!?]+)?)',
+                            r'Located\s+in\s+([^.!?]+)',
+                        ]
+                        for pattern in location_patterns:
+                            loc_match = re.search(pattern, description)
+                            if loc_match:
+                                location = loc_match.group(1).strip()
+                                if len(location) > 3 and len(location) < 100:
+                                    property_data['location'] = location
+                                    logger.info(f"Extracted location from description: {location}")
+                                    break
+                    
+                    logger.info(f"httpx scraping successful for property {property_id}: {property_data.get('name')}")
+                else:
+                    logger.warning(f"httpx request returned status {response.status_code}")
+                    
+        except Exception as e:
+            logger.error(f"httpx scraping failed: {str(e)}")
+        
+        return property_data
     
     def _check_availability(self, property_data: Dict[str, Any]) -> bool:
         """
